@@ -1,0 +1,146 @@
+@import "tailwindcss";
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body { 
+    font-family: 'Lato', sans-serif; 
+  }
+  h1, h2, h3, h4 { 
+    font-family: 'Playfair Display', serif; 
+  }
+}
+
+@layer utilities {
+  .animate-fade-in { 
+    animation: fadeIn 0.8s ease-out forwards; 
+  }
+  
+  .custom-scrollbar {
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    overscroll-behavior: contain;
+    overflow-y: auto;
+  }
+
+  /* Hero cinematic infinite zoom */
+  .animate-hero-zoom {
+    animation: heroZoom 25s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+
+  /* Staggered text entrance for hero content */
+  .animate-hero-badge {
+    opacity: 0;
+    animation: fadeSlideUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+  }
+  .animate-hero-title {
+    opacity: 0;
+    animation: fadeSlideUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards;
+  }
+  .animate-hero-subtitle {
+    opacity: 0;
+    animation: fadeSlideUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.9s forwards;
+  }
+
+  /* Scroll-triggered reveal animations */
+  .reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reveal.revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .reveal-left {
+    opacity: 0;
+    transform: translateX(-60px);
+    transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reveal-left.revealed {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .reveal-right {
+    opacity: 0;
+    transform: translateX(60px);
+    transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reveal-right.revealed {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .reveal-scale {
+    opacity: 0;
+    transform: scale(0.92);
+    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reveal-scale.revealed {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  /* Stagger delays for children */
+  .delay-100 { transition-delay: 100ms; }
+  .delay-200 { transition-delay: 200ms; }
+  .delay-300 { transition-delay: 300ms; }
+  .delay-400 { transition-delay: 400ms; }
+  .delay-500 { transition-delay: 500ms; }
+}
+
+/* ── Keyframes ─────────────────────────────── */
+
+@keyframes fadeIn { 
+  from { opacity: 0; transform: translateY(10px); } 
+  to { opacity: 1; transform: translateY(0); } 
+}
+
+@keyframes float { 
+  0%, 100% { transform: translateY(0px); } 
+  50% { transform: translateY(-10px); } 
+}
+
+/* Hero infinite cinematic zoom — slow breathe-like scale */
+@keyframes heroZoom {
+  0% {
+    transform: scale(1.0);
+  }
+  50% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1.05);
+  }
+}
+
+/* Smooth slide-up entrance for hero text elements */
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+/* ── Scrollbar ─────────────────────────────── */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #f1f1f1; }
+::-webkit-scrollbar-thumb { background: #166534; border-radius: 4px; }
+
+/* ── Loader ────────────────────────────────── */
+#initial-loader { transition: opacity 0.5s ease-out, visibility 0.5s; }
+.loader-leaf { color: #166534; animation: float 2s ease-in-out infinite; }

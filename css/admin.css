@@ -1,0 +1,33 @@
+/* Font Imports */
+/* @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap'); */
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+.tab-active {
+    border-bottom: 2px solid #15803d;
+    color: #15803d;
+    font-weight: 600;
+}
+
+.tab-inactive {
+    color: #6b7280;
+}
+
+.tab-inactive:hover {
+    color: #374151;
+}
+
+[data-icon] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.login-bg {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');
+    background-size: cover;
+    background-position: center;
+}
