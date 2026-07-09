@@ -1,8 +1,20 @@
 # 🏞️ Parcelas Cachapoal — Plataforma Inmobiliaria Autogestionable
 
+> **Versión del producto: Pro Básica.** El diseño y el alcance funcional de esta entrega son la línea base a preservar; mejoras visuales mayores o features PRO reales van en ramas aparte.
+
 Plataforma web inmobiliaria completa y autogestionable para la venta y promoción de propiedades, parcelas y terrenos en la **VI Región del Libertador Bernardo O'Higgins, Chile**, con especial énfasis en las localidades cercanas al **Lago Rapel** y el Valle del Cachapoal.
 
-El sistema combina una **landing page pública** de alto impacto visual con un **panel de administración privado**, conectados ambos a una base de datos en tiempo real. El administrador puede gestionar su catálogo de propiedades, recibir y responder leads de contacto, y configurar la información del sitio sin necesidad de tocar código.
+El sistema combina una **landing page pública** de alto impacto visual con un **panel de administración privado**, conectados ambos a **Firebase Firestore**. El administrador puede gestionar su catálogo de propiedades, recibir leads de contacto y visitas, y configurar la información del sitio sin necesidad de tocar código. Los datos se cargan al abrir la página o al refrescar en el admin (fetch con el SDK; no hay listeners `onSnapshot` en el código actual).
+
+---
+
+## 📚 Documentación
+
+| Documento | Para quién | Contenido |
+|---|---|---|
+| [`CLAUDE.md`](./CLAUDE.md) | Agentes de codificación (Claude Code, etc.) | Comandos, mapa de módulos, convenciones y gotchas verificados |
+| [`AGENTS.md`](./AGENTS.md) | Cualquier agente de IA (Codex, Grok, Gemini, …) | Estándar agents.md condensado; apunta a la guía extendida |
+| [`docs/ARQUITECTURA.md`](./docs/ARQUITECTURA.md) | Humanos y agentes | Flujo de datos, build MPA, modelo Firestore y auth del admin |
 
 ---
 
@@ -29,7 +41,7 @@ El proyecto está construido como una aplicación **Multi-Page (MPA)** gestionad
 | `index.html` | `/` | React + Tailwind | Landing page pública que los visitantes ven |
 | `admin.html` | `/admin.html` | Vanilla JS + Tailwind (CDN) | Panel de administración protegido con login |
 
-Ambos comparten la misma instancia de **Firebase** (Firestore + Auth), lo que permite que los cambios realizados en el admin se reflejen en tiempo real en la landing pública.
+Ambos comparten la misma instancia de **Firebase** (Firestore + Auth). Los cambios del admin se reflejan en la landing al **recargar** la página pública (ambas leen Firestore con `getDocs` / `getDoc`, no con suscripción en vivo).
 
 ### Flujo de Datos
 
@@ -55,16 +67,17 @@ Sitio de cara al cliente construido en **React 19**, con foco en velocidad, est�
 
 ### Características
 - **Hero inmersivo** con efecto de zoom progresivo y navegación con scroll suave entre secciones.
-- **Catálogo dinámico** de propiedades con filtros por nombre, ubicación y precio, cargado en tiempo real desde Firestore.
+- **Catálogo dinámico** de propiedades cargado desde Firestore (se ocultan las marcadas como `hidden`).
+- **Búsqueda** por título, ubicación, categoría o tipo (barra sobre el hero; no hay filtros por rango de precio).
 - **Galería Lightbox** para visualización de imágenes en alta resolución.
 - **Fichas detalladas** por propiedad con modal expandido (especificaciones, precio, galería, mapa, estado).
-- **Agendamiento de visitas** mediante modal dedicado con envío directo a la base de datos.
-- **Formulario de contacto** conectado a Firestore para la recepción de leads.
+- **Agendamiento de visitas** mediante modal dedicado → colección Firestore `visitas`.
+- **Formulario de contacto** → colección Firestore `messages`.
 - **Animaciones y transiciones** suaves: scroll-reveal, fade-in escalonado y micro-interacciones en hover.
 
 ### SEO Implementado
 - Meta tags completas: Open Graph, Twitter Cards, geolocalización, canonical URL.
-- Datos estructurados JSON-LD (schema.org) para `RealEstateAgent` y `WebSite`.
+- Datos estructurados JSON-LD (schema.org): `RealEstateAgent`, `WebSite`, `Product`, `FAQPage`, `BreadcrumbList`.
 - Jerarquía semántica estricta: un único `<h1>`, secuencia `<h2>`/`<h3>`, elemento `<main>`, atributos ARIA.
 - Bloque `<noscript>` con contenido estático pre-renderizado para crawlers que no ejecutan JS.
 - Labels `id`/`htmlFor` en todos los campos de formulario para accesibilidad.
@@ -79,12 +92,12 @@ Interfaz privada en **Vanilla JS** puro (sin frameworks), protegida con Firebase
 
 | Sección | Archivo Controlador | Funcionalidad |
 |---|---|---|
-| **Dashboard** | `src/admin/main.js` | Estadísticas en tiempo real: total de propiedades, mensajes recibidos, destacadas activas |
-| **Propiedades** | `src/admin/properties.js` | ABM completo: crear, editar, eliminar parcelas. Subida de imágenes a Cloudinary. Control de estado (Disponible / Reservada / Vendida) y destacado |
-| **Mensajes** | `src/admin/messages.js` | Bandeja de leads y solicitudes de agendamiento recibidas desde la landing |
-| **Contacto** | `src/admin/contact.js` | Edición de la información pública del negocio (teléfono, email, dirección, horarios, redes sociales) |
-| **Landing** | Inline en `admin.html` | Preview visual de secciones Hero y Nosotros. Mockups PRO con modal de upgrade |
-| **Asistente IA** | Inline en `admin.html` | Placeholder PRO para futuro agente conversacional con Gemini API |
+| **Dashboard** | `src/admin/main.js` + `settings.js` | Stats (totales de propiedades, mensajes no leídos, destacadas), formulario de redes del footer (`settings/footerLinks`), acceso webmail y bloque PRO de estadísticas mock |
+| **Propiedades** | `src/admin/properties.js` | ABM completo: crear, editar, eliminar parcelas. Subida de imágenes a Cloudinary. Estados: Disponible / Reservado / Vendido / Oculto + destacado |
+| **Mensajes** | `src/admin/messages.js` | Bandeja dual: colección `visitas` (posibles visitas) y `messages` (contacto general) |
+| **Contacto** | `src/admin/contact.js` | Edición de la información pública del negocio en `settings/contactInfo` (teléfono, email, dirección, horario, WhatsApp) |
+| **Landing** | Inline en `admin.html` | Preview visual de secciones Hero y Nosotros. Mockups PRO con modal de upgrade (no persisten en Firestore en Pro Básica) |
+| **Asistente IA** | Inline en `admin.html` | Placeholder PRO (modal de upsell; sin integración Gemini en esta versión) |
 
 ### Funcionalidades Clave
 - **Login seguro** con Firebase Auth (email + contraseña).
@@ -130,9 +143,9 @@ Interfaz privada en **Vanilla JS** puro (sin frameworks), protegida con Firebase
 │       ├── main.js         # Inicialización, switchTab, dashboard stats
 │       ├── properties.js   # CRUD de propiedades + integración Cloudinary
 │       ├── messages.js     # Listado y gestión de leads/mensajes
-│       ├── contact.js      # Lectura/escritura de config de contacto en Firestore
-│       ├── settings.js     # Configuraciones adicionales del sitio
-│       └── utils.js        # Renderizado de íconos SVG y helpers compartidos
+│       ├── contact.js      # Lectura/escritura de settings/contactInfo
+│       ├── settings.js     # Lectura/escritura de settings/footerLinks (redes)
+│       └── utils.js        # Renderizado de íconos SVG (data-icon) y helpers
 │
 ├── css/                    # Estilos adicionales
 │   ├── admin.css           # Animaciones y estilos del panel admin
@@ -187,15 +200,19 @@ CLOUDINARY_CONFIG: {
 
 > **Nota:** Cada deploy (local, staging, producción) utiliza sus propias credenciales de Firebase y Cloudinary. La configuración es independiente por entorno — no se comparten secrets entre deploys ni se utilizan archivos `.env`.
 
-### 3. Colecciones de Firestore requeridas
+### 3. Colecciones y documentos de Firestore requeridos
 
-El sistema espera las siguientes colecciones en tu base de datos Firestore:
+El sistema espera los siguientes recursos en Firestore (nombres **exactos** usados en el código):
 
-| Colección | Uso | Campos principales |
+| Recurso | Uso | Campos principales |
 |---|---|---|
-| `properties` | Catálogo de propiedades | `title`, `description`, `price`, `size`, `location`, `images[]`, `featured`, `status`, `createdAt` |
-| `messages` | Leads de contacto y agendamientos | `name`, `phone`, `email`, `message`, `propertyId`, `createdAt`, `read` |
-| `contacto` | Configuración pública del negocio | `phone`, `email`, `address`, `schedule`, `socialLinks{}` |
+| `properties` | Catálogo de propiedades | `title`, `description`, `brief`, `price`, `currency`, `area`, `location`, `category`, `type`, `images[]`, `featured`, `status`, flags de servicios (`water`, `electricity`, `rol`, …), `createdAt`, `updatedAt` |
+| `messages` | Leads del formulario de contacto | `name`, `phone`, `email`, `message`, `createdAt`, `status` (`unread` al crear) |
+| `visitas` | Solicitudes de agendar visita | `name`, `phone`, `email`, `message`, `propertyId`, `propertyOfInterest`, `propertyTitle`, `createdAt`, `status` (`new` al crear) |
+| `settings/contactInfo` | Datos de contacto públicos | `phone`, `email`, `address`, `schedule`, `whatsappNumber`, `updatedAt` |
+| `settings/footerLinks` | Redes del footer | `socialLinks{ facebook, instagram, youtube, whatsapp }`, `whatsappNumber`, `updatedAt` |
+
+> Detalle completo de campos y flujos: [`docs/ARQUITECTURA.md`](./docs/ARQUITECTURA.md).
 
 ### 4. Crear un usuario administrador
 
@@ -233,7 +250,7 @@ npm run preview   # Preview local del build de producción
 
 ## 🔒 Seguridad
 
-- **Firebase Auth** protege el acceso al panel de administración. Sin credenciales válidas no se puede acceder.
-- **Reglas de Firestore**: Se recomienda configurar reglas de seguridad para que solo usuarios autenticados puedan escribir en las colecciones `properties` y `contacto`, y que `messages` permita escritura pública (para los formularios) pero lectura solo autenticada.
-- **Cloudinary Upload Preset**: Debe configurarse como *unsigned* para permitir la subida desde el widget del navegador, pero limitado por extensiones y tamaño máximo desde la consola de Cloudinary.
+- **Firebase Auth** protege el acceso al panel de administración a nivel de UI. Sin credenciales válidas no se muestra el panel; las reglas de Firestore en la consola deben reforzar esto.
+- **Reglas de Firestore (recomendadas)**: solo usuarios autenticados escriben en `properties` y en documentos de `settings`; `messages` y `visitas` permiten escritura pública (formularios de la landing) y lectura solo autenticada.
+- **Cloudinary Upload Preset**: Debe configurarse como *unsigned* para permitir la subida desde el widget del navegador, pero limitado por extensiones y tamaño máximo desde la consola de Cloudinary. Las credenciales del widget están en `src/utils/constants.js` y también hardcodeadas en `src/admin/properties.js` (mantener ambas alineadas).
 - **Sin `.env`**: Las credenciales de Firebase y Cloudinary se configuran directamente en los archivos fuente. Cada entorno de deploy maneja su propia configuración de forma independiente.
